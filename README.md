@@ -4,9 +4,13 @@ by Sarah Chen
 ## Why Whichtok?
 Whichtok constructs graphs out of TikTok content. 
 
-## Getting Started
-Dependencies:
+## Installation
+Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok
 ```
 pip install TikTokApi
 ```
-Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok
+
+You can install whichtok by running
+```
+pip install whichtok
+```
