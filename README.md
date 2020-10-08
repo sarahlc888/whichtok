@@ -1,11 +1,10 @@
-# whichtok
-by Sarah Chen
-
-## Why Whichtok?
-Whichtok constructs graphs out of TikTok content. 
+# Whichtok
+**Whichtok** is a Python library for graphical analysis of TikTok users and content. Developed by Sarah Chen.
 
 ## Installation
-You can install whichtok by running
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install whichtok.
+Run the following to install it on your computer: 
 ```
 pip install whichtok
 ```
@@ -15,3 +14,9 @@ Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scra
 ```
 pip3 install TikTokApi python-igraph
 ```
+### Contributions
+
+In the ``todo.md``, you'll find the tasks and features I'm currently working on.  
+
+### License
+
