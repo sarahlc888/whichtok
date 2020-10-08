@@ -4,7 +4,11 @@ api = TikTokApi()
 
 
 def get_trending(n):
-    """testing the API, pulled directly from quick start https://davidteather.github.io/TikTok-Api/#the-by-username-method"""
+    """
+    Testing the API.
+    
+    Pulled directly from quick start https://davidteather.github.io/TikTok-Api/#the-by-username-method.
+    """
     trending = api.trending(count=n)
 
     for tiktok in trending:
@@ -15,7 +19,8 @@ def get_trending(n):
 
 
 def fetch_repr_set(seed_user, n):
-    """Fetch a representative set of tiktok users from the given seed.
+    """
+    Fetch a representative set of tiktok users from the given seed.
 
     Keyword arguments:
     seed_user -- the user to use as a seed
@@ -27,7 +32,8 @@ def fetch_repr_set(seed_user, n):
     # TODO: load these users into the desired data structure
 
 def fetch_user_info(username, user_id, n):
-    """Fetch likes, hashtags from a given user.
+    """
+    Fetch likes, hashtags from a given user.
 
     Keyword arguments:
     username -- the user
