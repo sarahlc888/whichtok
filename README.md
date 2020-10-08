@@ -16,7 +16,9 @@ pip3 install TikTokApi python-igraph
 ```
 ### Contributions
 
-In the ``todo.md``, you'll find the tasks and features I'm currently working on.  
+In the ``todo.md``, you'll find the tasks and features which I'm currently working on.  
 
 ### License
+
+This is license information. 
 
