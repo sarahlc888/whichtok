@@ -45,11 +45,8 @@ class UserGroup:
                 sugg_hashtags = fetch_user_hashtags(user_dict, self.hashtags, verbose=verbose) # fetch hashtags for user and populate master list
                 sugg_sounds = fetch_user_sounds(user_dict, self.sounds, verbose=verbose) # fetch sounds for user and populate master list
                 user_videos = fetch_user_videos(user_dict, self.videos, verbose=verbose)
-                likes = fetch_user_likes(
-                    user_dict, n_likes=10, verbose=verbose
-                )
+
                 user_group_dict[username] = {}
-                user_group_dict[username]['likes'] = likes
                 user_group_dict[username]['sugg_hashtags'] = sugg_hashtags
                 user_group_dict[username]['sugg_sounds'] = sugg_sounds
                 user_group_dict[username]['videos'] = user_videos
@@ -241,24 +238,6 @@ def fetch_user_videos(user_dict, video_reference, n_videos=10, verbose=False):
         video_reference[video_id]['hashtags'] = hashtags
 
     return video_ids
-
-
-
-def fetch_user_likes(user_dict, n_likes=10, verbose=False):
-    """
-    Fetch likes from a given user and update reference list
-
-    Keyword arguments:
-    user_dict -- dictionary of 1 user's info
-    n_likes -- number of likes to fetch, capped at ~2,000 (if public)
-    """    
-    if verbose:
-        print('...fetching likes')
-    likes = api.userLiked(user_dict['id'], user_dict['secUid'], count=n_likes)
-
-    return likes
-    
-
 
 
 ## preliminary testing functions ##
