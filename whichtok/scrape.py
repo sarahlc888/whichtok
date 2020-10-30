@@ -6,6 +6,7 @@ import subprocess
 
 api = TikTokApi()
 
+# UserGroup(seed_user='tiktok', group_size=20, json_out_stem='tiktok_jsons', verbose=True)
 
 
 class UserGroup:
@@ -34,7 +35,7 @@ class UserGroup:
     def __init__(self, seed_user=None, group_size=None, json_out_stem=None, json_in_stem=None, verbose=False):
         """load user group from dictionary or corresponding json"""
         if seed_user != None and group_size != None:
-            suggested_n = crawl_user_set(seed_user, group_size)
+            suggested_n = UserGroup.crawl_user_set(seed_user, group_size)
             print(len(suggested_n))
             user_group_dict = {}
             for username in suggested_n:
@@ -42,9 +43,9 @@ class UserGroup:
                     print(username)
                 user_dict = suggested_n[username]
 
-                sugg_hashtags = fetch_user_hashtags(user_dict, self.hashtags, verbose=verbose) # fetch hashtags for user and populate master list
-                sugg_sounds = fetch_user_sounds(user_dict, self.sounds, verbose=verbose) # fetch sounds for user and populate master list
-                user_videos = fetch_user_videos(user_dict, self.videos, verbose=verbose)
+                sugg_hashtags = UserGroup.fetch_user_hashtags(user_dict, self.hashtags, verbose=verbose) # fetch hashtags for user and populate master list
+                sugg_sounds = UserGroup.fetch_user_sounds(user_dict, self.sounds, verbose=verbose) # fetch sounds for user and populate master list
+                user_videos = UserGroup.fetch_user_videos(user_dict, self.videos, verbose=verbose)
 
                 user_group_dict[username] = {}
                 user_group_dict[username]['sugg_hashtags'] = sugg_hashtags
@@ -87,167 +88,155 @@ class UserGroup:
         """form a graph"""
         pass
 
+    @staticmethod
+    def crawl_user_set(seed_username, n):
+        """
+        Get a list of tiktok users from the given username.
 
-def crawl_user_set(seed_username, n):
-    """
-    Get a list of tiktok users from the given username.
+        Keyword arguments:
+        seed_username -- the user to use as a seed
+        n -- number of users to fetch
+        json_out -- optional output path to write user information to as JSON
+        """
 
-    Keyword arguments:
-    seed_username -- the user to use as a seed
-    n -- number of users to fetch
-    json_out -- optional output path to write user information to as JSON
-    """
+        seed_id = api.getUser(seed_username)['userInfo']['user']['id']
+        suggested_n = api.getSuggestedUsersbyIDCrawler(count=n, startingId=seed_id)
+        suggested_n = UserGroup.user_list_to_dict(suggested_n)
 
-    seed_id = api.getUser(seed_username)['userInfo']['user']['id']
-    suggested_n = api.getSuggestedUsersbyIDCrawler(count=n, startingId=seed_id)
-    suggested_n = user_list_to_dict(suggested_n)
+        return suggested_n
+        
+        # alternatively: suggested_n = pd.DataFrame(suggested_n).drop(['extraInfo','keyToken','playToken'], axis=1)
 
-    return suggested_n
-    
-    # alternatively: suggested_n = pd.DataFrame(suggested_n).drop(['extraInfo','keyToken','playToken'], axis=1)
+    @staticmethod
+    def clean_user_dict(user_info_dict):
+        username = user_info_dict['subTitle'][1:]
+        return_dict = {}
 
-def clean_user_dict(user_info_dict):
-    username = user_info_dict['subTitle'][1:]
-    return_dict = {}
+        for info_field in ['title','id','description']:
+            return_dict[info_field] = user_info_dict[info_field]
+        for info_field in ['verified','fans','likes','secUid','relation']:
+            return_dict[info_field] = user_info_dict['extraInfo'][info_field]
+        return_dict['username'] = username
 
-    for info_field in ['title','id','description']:
-        return_dict[info_field] = user_info_dict[info_field]
-    for info_field in ['verified','fans','likes','secUid','relation']:
-        return_dict[info_field] = user_info_dict['extraInfo'][info_field]
-    return_dict['username'] = username
+        return return_dict
 
-    return return_dict
+    @staticmethod
+    def user_list_to_dict(user_info_dicts):
+        """load a list of tiktok user info dictionaries into one dictionary, with the keys being username"""
+        return_dict = {}
+        for user_info in user_info_dicts:
+            username = user_info['subTitle'][1:]
+            return_dict[username] = UserGroup.clean_user_dict(user_info)
 
-def user_list_to_dict(user_info_dicts):
-    """load a list of tiktok user info dictionaries into one dictionary, with the keys being username"""
-    return_dict = {}
-    for user_info in user_info_dicts:
-        username = user_info['subTitle'][1:]
-        return_dict[username] = clean_user_dict(user_info)
+        return return_dict
 
-    return return_dict
+    @staticmethod
+    def fetch_user_hashtags(user_dict, hashtag_reference, n_sugg_hashtags=10, verbose=False):
+        """
+        Fetch suggested hashtags from a given user and update reference list
+        
+        Keyword arguments:
+        user_dict -- dictionary of 1 user's info
+        hashtag_reference -- running dictionary of hashtag information to update
+        n_sugg_hashtags -- number of suggested hashtags to fetch
+        """
+        if verbose:
+            print('...fetching #s')
 
+        hashtag_info_dicts = api.getSuggestedHashtagsbyID(count=n_sugg_hashtags, userId=user_dict['id'])
+        sugg_hashtag_ids = []
 
+        for hashtag_info in hashtag_info_dicts: # loop through each hashag
+            hashtag_name = hashtag_info['title']
+            sugg_hashtag_ids.append(hashtag_name) # add hashtag to list attached to this user
 
-
-
-def fetch_user_hashtags(user_dict, hashtag_reference, n_sugg_hashtags=10, verbose=False):
-    """
-    Fetch suggested hashtags from a given user and update reference list
-    
-    Keyword arguments:
-    user_dict -- dictionary of 1 user's info
-    hashtag_reference -- running dictionary of hashtag information to update
-    n_sugg_hashtags -- number of suggested hashtags to fetch
-    """
-    if verbose:
-        print('...fetching #s')
-
-    hashtag_info_dicts = api.getSuggestedHashtagsbyID(count=n_sugg_hashtags, userId=user_dict['id'])
-    sugg_hashtag_ids = []
-
-    for hashtag_info in hashtag_info_dicts: # loop through each hashag
-        hashtag_name = hashtag_info['title']
-        sugg_hashtag_ids.append(hashtag_name) # add hashtag to list attached to this user
-
-        if hashtag_name in hashtag_reference:
-            # if hashtag is already recorded, skip
-            continue
-
-        # otherwise, fetch the hashtag information
-        hashtag_reference[hashtag_name] = {}
-
-        for info_field in ['id','title','subTitle','description']:
-            hashtag_reference[hashtag_name][info_field] = hashtag_info[info_field]
-        for info_field in ['views']:
-            hashtag_reference[hashtag_name][info_field] = hashtag_info['extraInfo'][info_field]
-
-    return sugg_hashtag_ids
-
-def fetch_user_sounds(user_dict, sound_reference, n_sugg_sounds=10, verbose=False):
-    """
-    Fetch suggested sounds from a given user and update reference list
-
-    Keyword arguments:
-    user_dict -- dictionary of 1 user's info
-    sound_reference -- running dictionary of sound information to update
-    n_sugg_sounds -- number of suggested sounds to fetch
-    """    
-
-    if verbose:
-        print('...fetching sounds')
-
-    suggested_sounds = api.getSuggestedMusicbyID(count=n_sugg_sounds, userId=user_dict['id'])
-
-    sugg_sounds_ids = []
-
-    for sound_info in suggested_sounds:
-        sound_name = sound_info['title']
-        sugg_sounds_ids.append(sound_name)
-
-        if sound_name in sound_reference:
-            continue
-
-        sound_reference[sound_name] = {}
-
-        for info_field in ['id','title','subTitle','description']:
-            sound_reference[sound_name][info_field] = sound_info[info_field]
-        for info_field in ['posts']:
-            sound_reference[sound_name][info_field] = sound_info['extraInfo'][info_field]
-
-    return sugg_sounds_ids
-
-def fetch_user_videos(user_dict, video_reference, n_videos=10, verbose=False):
-    """
-    Fetch videos (with their hashtags and sounds) from a given user and update reference list
-
-    Keyword arguments:
-    user_dict -- dictionary of 1 user's info
-    n_videos -- number of videos to fetch, capped at ~2,000
-    """   
-
-    if verbose:
-        print('...fetching videos')
-    user_videos = api.userPosts(user_dict['id'], user_dict['secUid'], count=n_videos)
-    video_ids = []
-
-    for video_info in user_videos:
-        video_id = video_info['id']
-        video_ids.append(video_id)
-
-        if video_id in video_reference:
-            continue
-
-        video_reference[video_id] = {}
-
-        for info_field in ['id','desc']:
-            video_reference[video_id][info_field] = video_info[info_field]
-        for info_field in ['id','title']: # load music info
-            video_reference[video_id][f'music_{info_field}'] = video_info['music'][info_field]
-        for info_field in ['diggCount','shareCount','commentCount','playCount']: # load stats info
-            video_reference[video_id][f'stats_{info_field}'] = video_info['stats'][info_field]
-
-        # mine hashtag
-        caption_words = video_reference[video_id]['desc'].split(' ')
-        hashtags = []
-        for word in caption_words:
-            if len(word)==0:
+            if hashtag_name in hashtag_reference:
+                # if hashtag is already recorded, skip
                 continue
-            if word[0] == '#':
-                hashtags.append(word[1:])
-        video_reference[video_id]['hashtags'] = hashtags
 
-    return video_ids
+            # otherwise, fetch the hashtag information
+            hashtag_reference[hashtag_name] = {}
 
+            for info_field in ['id','title','subTitle','description']:
+                hashtag_reference[hashtag_name][info_field] = hashtag_info[info_field]
+            for info_field in ['views']:
+                hashtag_reference[hashtag_name][info_field] = hashtag_info['extraInfo'][info_field]
 
-## preliminary testing functions ##
+        return sugg_hashtag_ids
 
-# TODO: learn how to use unittest etc to do this test? come up with expected output values?
+    @staticmethod
+    def fetch_user_sounds(user_dict, sound_reference, n_sugg_sounds=10, verbose=False):
+        """
+        Fetch suggested sounds from a given user and update reference list
 
-def test_UserGroup_():
-    # test UserGroup initialization and output
-    UserGroup(seed_user='tiktok', group_size=10, json_out_stem='temp_jsons', verbose=True)
+        Keyword arguments:
+        user_dict -- dictionary of 1 user's info
+        sound_reference -- running dictionary of sound information to update
+        n_sugg_sounds -- number of suggested sounds to fetch
+        """    
 
-    # test UserGroup initialization from previous outputs
-    a = UserGroup(json_in_stem='temp_jsons')
-    
+        if verbose:
+            print('...fetching sounds')
+
+        suggested_sounds = api.getSuggestedMusicbyID(count=n_sugg_sounds, userId=user_dict['id'])
+
+        sugg_sounds_ids = []
+
+        for sound_info in suggested_sounds:
+            sound_name = sound_info['title']
+            sugg_sounds_ids.append(sound_name)
+
+            if sound_name in sound_reference:
+                continue
+
+            sound_reference[sound_name] = {}
+
+            for info_field in ['id','title','subTitle','description']:
+                sound_reference[sound_name][info_field] = sound_info[info_field]
+            for info_field in ['posts']:
+                sound_reference[sound_name][info_field] = sound_info['extraInfo'][info_field]
+
+        return sugg_sounds_ids
+
+    @staticmethod
+    def fetch_user_videos(user_dict, video_reference, n_videos=5, verbose=False):
+        """
+        Fetch videos (with their hashtags and sounds) from a given user and update reference list
+
+        Keyword arguments:
+        user_dict -- dictionary of 1 user's info
+        n_videos -- number of videos to fetch, capped at ~2,000
+        """   
+
+        if verbose:
+            print('...fetching videos')
+        user_videos = api.userPosts(user_dict['id'], user_dict['secUid'], count=n_videos)
+        video_ids = []
+
+        for video_info in user_videos:
+            video_id = video_info['id']
+            video_ids.append(video_id)
+
+            if video_id in video_reference:
+                continue
+
+            video_reference[video_id] = {}
+
+            for info_field in ['id','desc']:
+                video_reference[video_id][info_field] = video_info[info_field]
+            for info_field in ['id','title']: # load music info
+                video_reference[video_id][f'music_{info_field}'] = video_info['music'][info_field]
+            for info_field in ['diggCount','shareCount','commentCount','playCount']: # load stats info
+                video_reference[video_id][f'stats_{info_field}'] = video_info['stats'][info_field]
+
+            # mine hashtag
+            caption_words = video_reference[video_id]['desc'].split(' ')
+            hashtags = []
+            for word in caption_words:
+                if len(word)==0:
+                    continue
+                if word[0] == '#':
+                    hashtags.append(word[1:])
+            video_reference[video_id]['hashtags'] = hashtags
+
+        return video_ids
