@@ -81,13 +81,6 @@ class UserGroup:
         else:
             raise 'Error: plase specify `json` or `seed_user` and `group_size`'
         
-    def make_user_graph(self):
-        """form a graph"""
-        pass
-    def make_video_graph(self):
-        """form a graph"""
-        pass
-
     @staticmethod
     def crawl_user_set(seed_username, n):
         """
