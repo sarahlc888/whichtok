@@ -45,12 +45,14 @@ class UserGroup:
 
                 sugg_hashtags = UserGroup.fetch_user_hashtags(user_dict, self.hashtags, verbose=verbose) # fetch hashtags for user and populate master list
                 sugg_sounds = UserGroup.fetch_user_sounds(user_dict, self.sounds, verbose=verbose) # fetch sounds for user and populate master list
-                user_videos = UserGroup.fetch_user_videos(user_dict, self.videos, verbose=verbose)
+                user_videos, user_hashtags, user_sounds = UserGroup.fetch_user_videos(user_dict, self.videos, verbose=verbose)
 
                 user_group_dict[username] = {}
                 user_group_dict[username]['sugg_hashtags'] = sugg_hashtags
                 user_group_dict[username]['sugg_sounds'] = sugg_sounds
                 user_group_dict[username]['videos'] = user_videos
+                user_group_dict[username]['used_hashtags'] = user_hashtags
+                user_group_dict[username]['used_sounds'] = user_sounds
                 
             self.users_dict = user_group_dict
 
@@ -206,6 +208,9 @@ class UserGroup:
         user_videos = api.userPosts(user_dict['id'], user_dict['secUid'], count=n_videos)
         video_ids = []
 
+        all_user_hashtags = set() # keep a list of all hashtags used by a user
+        all_user_sounds = set() # keep a list of all sounds used by a user
+
         for video_info in user_videos:
             video_id = video_info['id']
             video_ids.append(video_id)
@@ -230,6 +235,8 @@ class UserGroup:
                     continue
                 if word[0] == '#':
                     hashtags.append(word[1:])
+                    all_user_hashtags.add(word[1:])
             video_reference[video_id]['hashtags'] = hashtags
 
-        return video_ids
+            all_user_sounds.add(video_reference[video_id]['music_id'])
+        return video_ids, list(all_user_hashtags), list(all_user_sounds)
