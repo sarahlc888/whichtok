@@ -6,9 +6,9 @@
 ## Installation
 Install Whichtok and its dependencies with the package manager [pip](https://pip.pypa.io/en/stable/):
 ```
-pip3 install whichtok TikTokApi python-igraph
+pip3 install whichtok TikTokApi python-igraph cairocffi
 ```
-Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok and [`igraph`](https://github.com/igraph/python-igraph) for graph construction and manipulation. 
+Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok and [`igraph`](https://github.com/igraph/python-igraph) for graph construction and manipulation. [`cairocffi`](https://www.cairographics.org/) is a dependency of `igraph` necessary for graph visualizations.
 
 ## Why Whichtok?
 Social media platforms such as Instagram and Twitter match people to content using a social graph. Users follow other users to view and interact with their posts and may adjust who follow to tailor their feed to their interests. Unlike other platforms, however, TikTok matches content to users using an *interest graph*.
