@@ -1,5 +1,9 @@
-# Whichtok
+
+
+# <img src="https://cdn4.iconfinder.com/data/icons/social-media-flat-7/64/Social-media_Tiktok-512.png" width="30" height="30"> Whichtok <img src="https://cdn4.iconfinder.com/data/icons/social-media-flat-7/64/Social-media_Tiktok-512.png" width="30" height="30">
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+
+
 
 **Whichtok** is a library to construct social graphs from TikTok data. The library is currently a WIP, and [contributions](#contributions) are greatly appreciated.
 
