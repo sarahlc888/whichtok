@@ -2,6 +2,18 @@ from igraph import * # https://github.com/igraph/python-igraph
 from scrape import UserGroup
 
 class UserGraph:
+    """Represents TikTok users in a weighted undirected graph
+
+    Weights edges between users by extent of user interaction, 
+    measured through similarity of hashtags and sounds used
+    (more methods coming soon).
+
+    Attributes:
+        username_to_index: a dictionary mapping each username to the appropriate integer
+        user_list: a list of usernames, mapping each integer to the appropriate username
+        graph: an igraph Graph object describing the group of users, where vertex i
+          corresponds to user `user_list[i]`
+    """
     username_to_index = {}
     user_list = []
     
@@ -11,9 +23,15 @@ class UserGraph:
         return 'See graph png'
 
     def __init__(self, user_group, edge_criteria=['used_hashtags', 'used_sounds']):
-        """form a graph of tiktok users from a UserGroup object
-        
-        construct edges using suggested hashtags, suggested sounds, used hashtags, or used sounds
+        """Constructs a graph of tiktok users from a UserGroup object
+
+        Construct edges using suggested hashtags, suggested sounds, 
+        used hashtags, or used sounds. Store graph in `self.graph`.
+
+        Args:
+            user_group: a UserGroup object to transform into a graph
+            edge_criteria: a list of strings representing how edge weights 
+              will be determined
         """
 
         # load users into UserGraph structures username_to_index and user_list
@@ -52,6 +70,17 @@ class UserGraph:
 
     @staticmethod
     def calculate_edge_weight(user1, user2, edge_criteria):
+        """Calculates the edgeweight between two given users
+
+        Args:
+            user1: a dictionary of a user's information
+            user2: a dictionary of another user's information
+            edge_criteria: a list of strings representing how edge weight
+              will be determined
+        
+        Returns:
+            A float representing the appropriate edge weight
+        """
         weight = 0
         for criteria in edge_criteria:
             if criteria in ['sugg_hashtags', 'sugg_sounds', 'used_hashtags', 'used_sounds']:
@@ -60,7 +89,7 @@ class UserGraph:
             elif criteria in ['TODO']:
                 pass
         return weight
-                
 
-a = UserGraph(UserGroup(json_in_stem='tiktok_jsons'))
-print(a)
+if __name__=='__main__':            
+    a = UserGraph(UserGroup(json_in_stem='tiktok_jsons'))
+    print(a)
