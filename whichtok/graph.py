@@ -60,9 +60,9 @@ class UserGraph:
 
                 edgelist.append((i,j))
                 weights.append(edge_weight)
-                
+        
+        # load edges and weights into graph
         g.add_edges(edgelist)
-
         g.es['weight'] = weights
         g.es['label'] = weights
 
@@ -84,12 +84,8 @@ class UserGraph:
         weight = 0
         for criteria in edge_criteria:
             if criteria in ['sugg_hashtags', 'sugg_sounds', 'used_hashtags', 'used_sounds']:
-                # proportion of overlap, scaled by number of suggestions given (should be 9-10)
+                # proportion of overlap, scaled by number of suggestions given (should be 9-10 total)
                 weight += len(set(user1[criteria]).intersection(set(user2[criteria]))) / mean([len(user1[criteria]), len(user2[criteria])])
             elif criteria in ['TODO']:
                 pass
         return weight
-
-if __name__=='__main__':            
-    a = UserGraph(UserGroup(json_in_stem='tiktok_jsons'))
-    print(a)
