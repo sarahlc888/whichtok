@@ -22,7 +22,7 @@ class UserGraph:
         plot(self.graph, layout = layout)
         return 'See graph png'
 
-    def __init__(self, user_group, edge_criteria=['used_hashtags', 'used_sounds']):
+    def __init__(self, user_group, edge_criteria=['used_hashtags', 'used_sounds'], verbose=False):
         """Constructs a graph of tiktok users from a UserGroup object
 
         Construct edges using suggested hashtags, suggested sounds, 
@@ -39,7 +39,8 @@ class UserGraph:
             self.username_to_index[user] = i
             self.user_list.append(user)
 
-        print(self.user_list)
+        if verbose:
+            print(f'users: {self.user_list}')
 
         # initialize graph
         g = Graph()
