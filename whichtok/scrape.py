@@ -10,93 +10,115 @@ api = TikTokApi()
 
 
 class UserGroup:
-    """Define a group of TikTok users and store their information
+    """Scrapes a group of TikTok users and stores their information
 
-    Class includes functionality to scrape user information, store that info in CSV/JSON format, 
+    Includes functionality to scrape user information, store that info in CSV/JSON format, 
     and read info from previously scraped UserGroups.
+
+    Attributes:
+        users_dict: a dictionary of user information, in which the keys are usernames
+          and the values contain information like the hashtags and sounds used by
+          referencing the following dictionaries of hashtags, sounds, and videos
+        hashtags: a dictionary of hashtag information, in which the keys are hashtag names
+        sounds: a dictionary of sounds information, in which the keys are sound IDs
+        video: a dictionary of video information, in which the keys are video IDs
     """
-    users_dict = {} # a dictionary of user information (keys are usernames)
+    users_dict = {}
     
-    # dictionaries to store information about hashtags and sounds (to remove repetitive info)
     hashtags = {} # hashtags[name of hashtag] = info
     sounds = {} # sounds[id of sound] = info
     videos = {}
 
+    # utility functions
     @staticmethod
     def load_from_json(json_file):
+        """Loads a JSON file into a dictionary """
         json_stream = open(json_file, 'r')
         json_dict = json.load(json_stream)
         json_stream.close()
         return json_dict
     @staticmethod
     def load_from_csv(csv_file):
+        """loads a CSV file into a dictionary"""
         return pd.read_csv(csv_file, sep='\t', index_col=0).to_dict('index')
 
     def __init__(self, seed_user=None, group_size=None, json_out_stem=None, json_in_stem=None, verbose=False):
-        """load user group from dictionary or corresponding json"""
+        """Constructs a group of tiktok users
+
+        Constructs using a seed user and desired size and output
+        or load an existing UserGroup from JSONs and CSVs.
+        All arguments are optional, to create a new UserGroup,
+        seed_user and group_size must be specified, and json_out_stem
+        can optionally specified to output the constructed UserGroup.
+        Alternatively, json_in_stem must be specified to load an existing UserGroup.
+
+        Args:
+            seed_user: Optional; a user to begin 'snowballing' from to discover other users
+            group_size: Optional; number of users to include in the group
+            json_out_stem: Optional; path to output files
+            json_in_stem: Optional; path to input files to load UserGroup from
+            verbose: Optional; adjust verbosity
+        """
         if seed_user != None and group_size != None:
+            # create a UserGroup
+
+            # find N users based off of the given seed user
             suggested_n = UserGroup.crawl_user_set(seed_user, group_size)
-            print(len(suggested_n))
-            user_group_dict = {}
+
+            # load users' information
+            self.users_dict = {}
             for username in suggested_n:
                 if verbose:
                     print(username)
-                user_dict = suggested_n[username]
 
+                # the dictionary of information about the user provided by the TikTok API
+                user_dict = suggested_n[username] 
+
+                # extract relevant information into new dictionaries
                 sugg_hashtags = UserGroup.fetch_user_hashtags(user_dict, self.hashtags, verbose=verbose) # fetch hashtags for user and populate master list
                 sugg_sounds = UserGroup.fetch_user_sounds(user_dict, self.sounds, verbose=verbose) # fetch sounds for user and populate master list
-                user_videos = UserGroup.fetch_user_videos(user_dict, self.videos, verbose=verbose)
+                user_videos, user_hashtags, user_sounds = UserGroup.fetch_user_videos(user_dict, self.videos, verbose=verbose)
 
-                user_group_dict[username] = {}
-                user_group_dict[username]['sugg_hashtags'] = sugg_hashtags
-                user_group_dict[username]['sugg_sounds'] = sugg_sounds
-                user_group_dict[username]['videos'] = user_videos
+                # store relevant information in the class users_dict dictionary
+                self.users_dict[username] = {}
+                self.users_dict[username]['sugg_hashtags'] = sugg_hashtags
+                self.users_dict[username]['sugg_sounds'] = sugg_sounds
+                self.users_dict[username]['videos'] = user_videos
+                self.users_dict[username]['used_hashtags'] = user_hashtags
+                self.users_dict[username]['used_sounds'] = user_sounds
                 
-            self.users_dict = user_group_dict
-
+            # optionally output users' information
             if json_out_stem:
+                # output self.users_dict as json
                 subprocess.run(['mkdir','-p',json_out_stem])
                 user_data_output = open(f'{json_out_stem}/users.json', 'w')
-                json.dump(user_group_dict, user_data_output, indent='\t')
+                json.dump(self.users_dict, user_data_output, indent='\t')
                 user_data_output.close()
-                
-                pd.DataFrame(self.videos).transpose().to_csv(f'{json_out_stem}/videos.csv', sep='\t')
 
+                # output self.videos, self.hashtags, and self.sounds as CSVs
+                pd.DataFrame(self.videos).transpose().to_csv(f'{json_out_stem}/videos.csv', sep='\t')
                 pd.DataFrame(self.hashtags).transpose().to_csv(f'{json_out_stem}/hashtags.csv', sep='\t')
-                # hashtag_output = open(f'{json_out_stem}/hashtags.json', 'w')
-                # json.dump(self.hashtags, hashtag_output, indent='\t')
-                # hashtag_output.close()
-                
                 pd.DataFrame(self.sounds).transpose().to_csv(f'{json_out_stem}/sounds.csv', sep='\t')
-                # sound_output = open(f'{json_out_stem}/sounds.json', 'w')
-                # json.dump(self.sounds, sound_output, indent='\t')
-                # sound_output.close()
+
 
         elif json_in_stem:
+            # read in a UserGroup previously outputted
             self.users_dict = self.load_from_json(f'{json_in_stem}/users.json')
             self.hashtags = self.load_from_csv(f'{json_in_stem}/hashtags.csv')
             self.sounds = self.load_from_csv(f'{json_in_stem}/sounds.csv')
             self.videos = self.load_from_csv(f'{json_in_stem}/videos.csv')
 
         else:
+            # catch invalid parameter specification
             raise 'Error: plase specify `json` or `seed_user` and `group_size`'
         
-    def make_user_graph(self):
-        """form a graph"""
-        pass
-    def make_video_graph(self):
-        """form a graph"""
-        pass
-
     @staticmethod
     def crawl_user_set(seed_username, n):
-        """
-        Get a list of tiktok users from the given username.
+        """Fetches a list of tiktok users from the given username.
 
-        Keyword arguments:
-        seed_username -- the user to use as a seed
-        n -- number of users to fetch
-        json_out -- optional output path to write user information to as JSON
+        Args:
+            seed_username: a string representing the user to use as a seed
+            n: an integer representing the number of users to fetch
         """
 
         seed_id = api.getUser(seed_username)['userInfo']['user']['id']
@@ -105,10 +127,9 @@ class UserGroup:
 
         return suggested_n
         
-        # alternatively: suggested_n = pd.DataFrame(suggested_n).drop(['extraInfo','keyToken','playToken'], axis=1)
-
     @staticmethod
     def clean_user_dict(user_info_dict):
+        """Simplifies a dictionary of user information provided by TikTok API"""
         username = user_info_dict['subTitle'][1:]
         return_dict = {}
 
@@ -122,7 +143,7 @@ class UserGroup:
 
     @staticmethod
     def user_list_to_dict(user_info_dicts):
-        """load a list of tiktok user info dictionaries into one dictionary, with the keys being username"""
+        """Loads a list of tiktok user dictionaries into 1 dictionary, with usernames as keys"""
         return_dict = {}
         for user_info in user_info_dicts:
             username = user_info['subTitle'][1:]
@@ -132,13 +153,12 @@ class UserGroup:
 
     @staticmethod
     def fetch_user_hashtags(user_dict, hashtag_reference, n_sugg_hashtags=10, verbose=False):
-        """
-        Fetch suggested hashtags from a given user and update reference list
+        """Fetches suggested hashtags from a given user and updates reference list
         
-        Keyword arguments:
-        user_dict -- dictionary of 1 user's info
-        hashtag_reference -- running dictionary of hashtag information to update
-        n_sugg_hashtags -- number of suggested hashtags to fetch
+        Args:
+            user_dict: a dictionary of 1 user's info
+            hashtag_reference: a running dictionary of hashtag information to update
+            n_sugg_hashtags: number of suggested hashtags to fetch
         """
         if verbose:
             print('...fetching #s')
@@ -166,13 +186,12 @@ class UserGroup:
 
     @staticmethod
     def fetch_user_sounds(user_dict, sound_reference, n_sugg_sounds=10, verbose=False):
-        """
-        Fetch suggested sounds from a given user and update reference list
+        """Fetches suggested sounds from a given user and update reference list
 
-        Keyword arguments:
-        user_dict -- dictionary of 1 user's info
-        sound_reference -- running dictionary of sound information to update
-        n_sugg_sounds -- number of suggested sounds to fetch
+        Args:
+            user_dict: dictionary of one user's info
+            sound_reference: running dictionary of sound information to update
+            n_sugg_sounds: number of suggested sounds to fetch
         """    
 
         if verbose:
@@ -200,12 +219,11 @@ class UserGroup:
 
     @staticmethod
     def fetch_user_videos(user_dict, video_reference, n_videos=5, verbose=False):
-        """
-        Fetch videos (with their hashtags and sounds) from a given user and update reference list
+        """Fetches videos (with their hashtags and sounds) from a given user and update reference list
 
-        Keyword arguments:
-        user_dict -- dictionary of 1 user's info
-        n_videos -- number of videos to fetch, capped at ~2,000
+        Args:
+            user_dict: dictionary of one user's info
+            n_videos: number of videos to fetch, capped at ~2,000
         """   
 
         if verbose:
@@ -213,13 +231,19 @@ class UserGroup:
         user_videos = api.userPosts(user_dict['id'], user_dict['secUid'], count=n_videos)
         video_ids = []
 
+        all_user_hashtags = set() # keep a list of all hashtags used by a user
+        all_user_sounds = set() # keep a list of all sounds used by a user
+
         for video_info in user_videos:
+            # iterate through videos
             video_id = video_info['id']
             video_ids.append(video_id)
 
             if video_id in video_reference:
+                # skip previously processed videos
                 continue
 
+            # fetch video information
             video_reference[video_id] = {}
 
             for info_field in ['id','desc']:
@@ -229,7 +253,7 @@ class UserGroup:
             for info_field in ['diggCount','shareCount','commentCount','playCount']: # load stats info
                 video_reference[video_id][f'stats_{info_field}'] = video_info['stats'][info_field]
 
-            # mine hashtag
+            # mines hashtag
             caption_words = video_reference[video_id]['desc'].split(' ')
             hashtags = []
             for word in caption_words:
@@ -237,6 +261,8 @@ class UserGroup:
                     continue
                 if word[0] == '#':
                     hashtags.append(word[1:])
+                    all_user_hashtags.add(word[1:])
             video_reference[video_id]['hashtags'] = hashtags
 
-        return video_ids
+            all_user_sounds.add(video_reference[video_id]['music_id'])
+        return video_ids, list(all_user_hashtags), list(all_user_sounds)

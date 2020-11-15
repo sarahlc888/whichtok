@@ -1,14 +1,18 @@
-# Whichtok
+
+
+# <img src="https://cdn4.iconfinder.com/data/icons/social-media-flat-7/64/Social-media_Tiktok-512.png" width="30" height="30"> Whichtok <img src="https://cdn4.iconfinder.com/data/icons/social-media-flat-7/64/Social-media_Tiktok-512.png" width="30" height="30">
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+
+
 
 **Whichtok** is a library to construct social graphs from TikTok data. The library is currently a WIP, and [contributions](#contributions) are greatly appreciated.
 
 ## Installation
 Install Whichtok and its dependencies with the package manager [pip](https://pip.pypa.io/en/stable/):
 ```
-pip3 install whichtok TikTokApi python-igraph
+pip3 install whichtok TikTokApi python-igraph cairocffi
 ```
-Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok and [`igraph`](https://github.com/igraph/python-igraph) for graph construction and manipulation. 
+Whichtok uses [`TikTok-Api`](https://davidteather.github.io/TikTok-Api/) to scrape video and user data from TikTok and [`igraph`](https://github.com/igraph/python-igraph) for graph construction and manipulation. [`cairocffi`](https://www.cairographics.org/) is a dependency of `igraph` necessary for graph visualizations.
 
 ## Why Whichtok?
 Social media platforms such as Instagram and Twitter match people to content using a social graph. Users follow other users to view and interact with their posts and may adjust who follow to tailor their feed to their interests. Unlike other platforms, however, TikTok matches content to users using an *interest graph*.
