@@ -1,5 +1,5 @@
 from igraph import * # https://github.com/igraph/python-igraph
-from scrape import UserGroup
+from .scrape import UserGroup
 
 class UserGraph:
     """Represents TikTok users in a weighted undirected graph
