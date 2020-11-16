@@ -37,7 +37,7 @@ Once obtaining user and video data, Whichtok can begin creating graphs.
 A graph is composed of nodes and edges and can be used to model and analyze many systems, including social media platforms.
 Whichtok uses the [`igraph`](https://github.com/igraph/python-igraph) library for efficient graph construction and manipulation. At the moment, it focuses on *user-level* graphs in the [`UserGraph`](https://github.com/sarahlc888/whichtok/blob/develop/whichtok/graph.py) class. Each node in the graph represents a TikTok user (whose information was scraped in the previous step), and nodes are connected by edges with weight determined by the amount of interaction between users. For example, an edgeweight could increase if one user liked or commented on another user's video or if two users posted TikToks using the same sound or hashtag.
 
-The work to be done is this area is that there's currently no way to determine user likes, removing an important method of graph construction (see [this issue](https://github.com/sarahlc888/whichtok/issues/5)). Finding alternative means or leveraging available information to construct meaningful graphs is a high priority.
+The work to be done is this area is improving the method of graph construction (see [this issue](https://github.com/sarahlc888/whichtok/issues/7)). Leveraging available information to construct more meaningful graphs is a high priority.
 
 Note: *Video-level* graphs are another potential type of graph within Whichtok. They have not yet been implemented, but could be implemented in a fashion similar to `UserGraph`, with the edgeweight between two videos determined by whether videos share a sound, hashtag, like from the same user, etc.
 
